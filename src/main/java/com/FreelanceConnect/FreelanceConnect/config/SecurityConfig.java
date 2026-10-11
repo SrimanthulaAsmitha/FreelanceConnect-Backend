@@ -1,3 +1,4 @@
+
 package com.FreelanceConnect.FreelanceConnect.config;
 
 import org.springframework.context.annotation.Bean;
@@ -79,13 +80,15 @@ public class SecurityConfig {
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
-        // ALLOW REACT FRONTEND PORTS
-        configuration.setAllowedOrigins(
+        // ALLOW LOCAL REACT FRONTEND PORTS
+    configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
                         "http://localhost:5174",
                         "http://localhost:5175",
-                        "http://127.0.0.1:5173"
+                        "http://localhost:5176",
+                        "http://127.0.0.1:5173",
+                        "http://127.0.0.1:5176"
                 )
         );
 
