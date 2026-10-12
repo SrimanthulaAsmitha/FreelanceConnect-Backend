@@ -16,102 +16,115 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
-private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-}
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
-    http
-        .csrf(csrf -> csrf.disable())
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .sessionManagement(session ->
-            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
-        .authorizeHttpRequests(auth -> auth
-            // Public endpoints
-            .requestMatchers(
-                "/api/users/register",
-                "/api/auth/login"
-            ).permitAll()
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
-            // Authenticated endpoints
-            .requestMatchers(
-                "/api/projects/**",
-                "/api/proposals/**",
-                "/api/reviews/**",
-                "/api/profile/**",
-                "/api/work-submissions/**",
-                "/api/notifications/**",
-                "/api/payments/**",
-                "/api/messages/**"
-            ).authenticated()
+        http
+            .csrf(csrf -> csrf.disable())
 
-            // All other endpoints
-            .anyRequest().authenticated()
-        )
-        .addFilterBefore(
-            jwtAuthenticationFilter,
-            UsernamePasswordAuthenticationFilter.class
+            .cors(cors ->
+                cors.configurationSource(corsConfigurationSource())
+            )
+
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(
+                    SessionCreationPolicy.STATELESS
+                )
+            )
+
+            .authorizeHttpRequests(auth -> auth
+
+                // Public endpoints
+                .requestMatchers(
+                    "/api/users/register",
+                    "/api/auth/login"
+                ).permitAll()
+
+                // Authenticated endpoints
+                .requestMatchers(
+                    "/api/projects/**",
+                    "/api/proposals/**",
+                    "/api/reviews/**",
+                    "/api/profile/**",
+                    "/api/work-submissions/**",
+                    "/api/notifications/**",
+                    "/api/payments/**",
+                    "/api/messages/**"
+                ).authenticated()
+
+                // Other endpoints require authentication
+                .anyRequest().authenticated()
+            )
+
+            .addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration =
+                new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+            List.of(
+                "https://freelance-connect-frontend.vercel.app",
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://localhost:5175",
+                "http://localhost:5176",
+                "http://localhost:5177",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174",
+                "http://127.0.0.1:5175",
+                "http://127.0.0.1:5176",
+                "http://127.0.0.1:5177"
+            )
         );
 
-    return http.build();
-}
+        configuration.setAllowedMethods(
+            List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+            )
+        );
 
-@Bean
-public CorsConfigurationSource corsConfigurationSource() {
+        configuration.setAllowedHeaders(
+            List.of("*")
+        );
 
-    CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowCredentials(true);
 
-    // Allow the deployed Vercel frontend and local development
-    configuration.setAllowedOrigins(
-        List.of(
-            "https://freelance-connect-frontend.vercel.app",
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:5175",
-            "http://localhost:5176",
-            "http://localhost:5177",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-            "http://127.0.0.1:5175",
-            "http://127.0.0.1:5176",
-            "http://127.0.0.1:5177"
-        )
-    );
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-    // Allow HTTP methods
-    configuration.setAllowedMethods(
-        List.of(
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "OPTIONS"
-        )
-    );
+        source.registerCorsConfiguration(
+            "/**",
+            configuration
+        );
 
-    // Allow request headers, including Authorization
-    configuration.setAllowedHeaders(List.of("*"));
+        return source;
+    }
 
-    // Allow credentials
-    configuration.setAllowCredentials(true);
-
-    UrlBasedCorsConfigurationSource source =
-        new UrlBasedCorsConfigurationSource();
-
-    source.registerCorsConfiguration("/**", configuration);
-
-    return source;
-}
-
-@Bean
-public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-}
-
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
